@@ -1,0 +1,43 @@
+name: Reddit Weekly Analytics
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Every Monday at 8:00 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  run-analytics:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run Reddit analytics script
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          SUBREDDIT_NAME: ${{ secrets.SUBREDDIT_NAME }}
+          GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: |
+          python reddit_stats.py
+      
+      - name: Upload logs (optional)
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: analytics-logs
+          path: ||
+            *.log
+            *.txt
